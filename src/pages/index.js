@@ -30,12 +30,29 @@ const HomePage = ({ data }) => {
   } = data;
 
   const [searchTerm, setSearchTerm] = useState('');
+  const [initialTab, setInitialTab] = useState('default-view');
+  const [tabView, setTabView] = useState('default-view');
 
   const { t } = useTranslation();
 
   const { loggedIn } = useLoggedIn();
 
-  const initialTab = 'default-view';
+  useEffect(() => {
+    setInitialTab(loggedIn ? 'default-view' : 'new-user-view');
+  }, [loggedIn]);
+
+  const handleHomepageToggleClick = useInstrumentedHandler(
+    () => {
+      console.log(tabView);
+    },
+    {
+      eventName: 'homepageToggleClick',
+      category: 'homepageToggle',
+      tabView,
+    }
+  );
+
+  console.log('tabview loggedin', loggedIn, initialTab);
 
   const mobileBreakpoint = '450px';
 
@@ -119,8 +136,24 @@ const HomePage = ({ data }) => {
             }
           `}
         >
-          <Tabs.BarItem id="new-user-view">New user view</Tabs.BarItem>
-          <Tabs.BarItem id="default-view">Default view</Tabs.BarItem>
+          <Tabs.BarItem
+            id="new-user-view"
+            onClick={() => {
+              setTabView('new-user-view');
+              handleHomepageToggleClick(tabView);
+            }}
+          >
+            New user view
+          </Tabs.BarItem>
+          <Tabs.BarItem
+            id="default-view"
+            onClick={() => {
+              setTabView('default-view');
+              handleHomepageToggleClick(tabView);
+            }}
+          >
+            Default view
+          </Tabs.BarItem>
         </Tabs.Bar>
 
         <Tabs.Pages>
