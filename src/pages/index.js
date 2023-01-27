@@ -11,6 +11,7 @@ import {
   useInstrumentedHandler,
   useTranslation,
   useLoggedIn,
+  useTessen,
   Tag,
   Tabs,
 } from '@newrelic/gatsby-theme-newrelic';
@@ -31,26 +32,14 @@ const HomePage = ({ data }) => {
 
   const [searchTerm, setSearchTerm] = useState('');
   const [initialTab, setInitialTab] = useState('default-view');
-  const [tabView, setTabView] = useState('default-view');
 
   const { t } = useTranslation();
-
+  const tessen = useTessen();
   const { loggedIn } = useLoggedIn();
 
   useEffect(() => {
     setInitialTab(loggedIn ? 'default-view' : 'new-user-view');
   }, [loggedIn]);
-
-  const handleHomepageToggleClick = useInstrumentedHandler(
-    () => {
-      console.log(tabView);
-    },
-    {
-      eventName: 'homepageToggleClick',
-      category: 'homepageToggle',
-      tabView,
-    }
-  );
 
   console.log('tabview loggedin', loggedIn, initialTab);
 
@@ -139,8 +128,11 @@ const HomePage = ({ data }) => {
           <Tabs.BarItem
             id="new-user-view"
             onClick={() => {
-              setTabView('new-user-view');
-              handleHomepageToggleClick(tabView);
+              tessen.track({
+                eventName: 'homepageToggleClick',
+                category: 'HomepageToggle',
+                tabView: 'newUserView',
+              });
             }}
           >
             New user view
@@ -148,8 +140,11 @@ const HomePage = ({ data }) => {
           <Tabs.BarItem
             id="default-view"
             onClick={() => {
-              setTabView('default-view');
-              handleHomepageToggleClick(tabView);
+              tessen.track({
+                eventName: 'homepageToggleClick',
+                category: 'HomepageToggle',
+                tabView: 'defaultView',
+              });
             }}
           >
             Default view
