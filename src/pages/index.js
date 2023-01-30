@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import PropTypes from 'prop-types';
 import { navigate } from '@reach/router';
 import { css } from '@emotion/react';
+import { useLocalStorage } from 'react-use';
 import { graphql } from 'gatsby';
 import {
   Link,
@@ -13,12 +14,13 @@ import {
   useLoggedIn,
   useTessen,
   Tag,
-  Tabs,
 } from '@newrelic/gatsby-theme-newrelic';
 import SurfaceLink from '../components/SurfaceLink';
 import HomepageBanner from '../components/HomepageBanner';
 import FindYourQuickStart from '../components/FindYourQuickstart';
 import MDXContainer from '../components/MDXContainer';
+import { useViewToggle } from '../components/ViewToggle/useViewToggle';
+import { useTabs } from '../@newrelic/gatsby-theme-newrelic/components/Tabs/Tabs';
 
 const HomePage = ({ data }) => {
   const {
@@ -31,17 +33,21 @@ const HomePage = ({ data }) => {
   } = data;
 
   const [searchTerm, setSearchTerm] = useState('');
-  const [initialTab, setInitialTab] = useState('default-view');
 
   const { t } = useTranslation();
   const tessen = useTessen();
   const { loggedIn } = useLoggedIn();
 
-  useEffect(() => {
-    setInitialTab(loggedIn ? 'default-view' : 'new-user-view');
-  }, [loggedIn]);
+  const [Tabs, { setTab, currentTab }] = useTabs();
+  const [Toggle, { setToggle, currentView }] = useViewToggle();
 
-  console.log('tabview loggedin', loggedIn, initialTab);
+  useEffect(() => {
+    if (!window.localStorage.getItem('docs-website/homepage-selected-tab')) {
+      setTab(loggedIn ? 'default-view' : 'new-user-view');
+    }
+  }, [setTab, loggedIn]);
+
+  console.log('tabview loggedin', loggedIn, currentTab);
 
   const mobileBreakpoint = '450px';
 
@@ -108,7 +114,7 @@ const HomePage = ({ data }) => {
           {t('home.search.popularSearches.options.4')}
         </Link>
       </div>
-      <Tabs initialTab={initialTab}>
+      <Tabs>
         <Tabs.Bar
           css={css`
             display: block;
