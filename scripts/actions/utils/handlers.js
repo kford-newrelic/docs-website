@@ -115,6 +115,16 @@ module.exports = {
     deserialize: deserializeComponent,
     serialize: serializeComponent,
   },
+  LicenseKey: {
+    deserialize: (h, node) => deserializeComponent(h, node, { type: 'LicenseKey' }),
+    // deserialize: (h, node) =>
+      // deserializeComponent(h, node, { type: 'LicenseKey' }),
+    serialize: (h, node) =>
+      h(node, 'span', {
+        'data-type': 'component',
+        'data-component': 'LicenseKey',
+      }, [u('text', 'account license key')]),
+  },
   Link: {
     deserialize: deserializeComponent,
     serialize: serializeComponent,
