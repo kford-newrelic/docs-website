@@ -15,12 +15,16 @@ import {
   useTessen,
   Tag,
 } from '@newrelic/gatsby-theme-newrelic';
+import ToggleSelector from '../components/ViewToggle/ToggleSelector';
+// import ToggleView from '../components/ViewToggle/ToggleView';
 import SurfaceLink from '../components/SurfaceLink';
 import HomepageBanner from '../components/HomepageBanner';
 import FindYourQuickStart from '../components/FindYourQuickstart';
 import MDXContainer from '../components/MDXContainer';
-import { useViewToggle } from '../components/ViewToggle/useViewToggle';
 import { useTabs } from '../@newrelic/gatsby-theme-newrelic/components/Tabs/Tabs';
+import { useViewToggle } from '../components/ViewToggle/useViewToggle';
+import ToggleView from '../components/ViewToggle/ToggleView';
+import ToggleViewContext from '@newrelic/gatsby-theme-newrelic/src/components/Context';
 
 const HomePage = ({ data }) => {
   const {
@@ -33,19 +37,33 @@ const HomePage = ({ data }) => {
   } = data;
 
   const [searchTerm, setSearchTerm] = useState('');
+  const [currentView, setCurrentView] = useState('new-user-view');
+  // const [initialView, setInitialView] = useLocalStorage(
+  //   'docs-website/homepage-selected-view',
+  //   currentView
+  // );
 
   const { t } = useTranslation();
   const tessen = useTessen();
   const { loggedIn } = useLoggedIn();
 
   const [Tabs, { setTab, currentTab }] = useTabs();
-  const [Toggle, { setToggle, currentView }] = useViewToggle();
+  // const [Toggle, { setView, currentView }] = useViewToggle();
 
   useEffect(() => {
-    if (!window.localStorage.getItem('docs-website/homepage-selected-tab')) {
-      setTab(loggedIn ? 'default-view' : 'new-user-view');
+    const storedToggleView = window.localStorage.getItem(
+      'docs-website/homepage-selected-tab'
+    );
+
+    if (storedToggleView) {
+      console.log(storedToggleView);
+      setCurrentView(storedToggleView);
     }
-  }, [setTab, loggedIn]);
+    if (!storedToggleView) {
+      setTab(loggedIn ? 'default-view' : 'new-user-view');
+      setCurrentView(loggedIn ? 'default-view' : 'new-user-view');
+    }
+  }, [setTab, setCurrentView, loggedIn]);
 
   console.log('tabview loggedin', loggedIn, currentTab);
 
@@ -61,210 +79,169 @@ const HomePage = ({ data }) => {
 
   return (
     <>
-      <h1
-        css={css`
-          font-size: 3.5rem;
-          font-weight: 500;
-          line-height: 1;
-          @media screen and (max-width: ${mobileBreakpoint}) {
-            font-size: 1.5rem;
-          }
-        `}
-      >
-        {t('home.pageTitle')}
-      </h1>
-      <SearchInput
-        placeholder={t('home.search.placeholder')}
-        size={SearchInput.SIZE.LARGE}
-        value={searchTerm || ''}
-        iconName={SearchInput.ICONS.SEARCH}
-        isIconClickable
-        alignIcon={SearchInput.ICON_ALIGNMENT.RIGHT}
-        onChange={(e) => setSearchTerm(e.target.value)}
-        onSubmit={() => navigate(`?q=${searchTerm || ''}`)}
-        css={css`
-          @media screen and (max-width: ${mobileBreakpoint}) {
-            margin-bottom: 1rem;
-          }
-        `}
-      />
-      <div
-        css={css`
-          margin-top: 1rem;
-          width: 40%;
-          display: flex;
-          width: 100%;
-          flex-wrap: wrap;
-          a {
-            margin-left: 0.75rem;
-          }
-          @media screen and (max-width: ${mobileBreakpoint}) {
-            display: none;
-          }
-        `}
-      >
-        <p>{t('home.search.popularSearches.title')}: </p>
-        <Link to="?q=nrql">{t('home.search.popularSearches.options.0')}</Link>
-        <Link to="?q=logs">{t('home.search.popularSearches.options.1')}</Link>
-        <Link to="?q=alert">{t('home.search.popularSearches.options.2')}</Link>
-        <Link to="?q=best practices">
-          {t('home.search.popularSearches.options.3')}
-        </Link>
-        <Link to="?q=kubernetes">
-          {t('home.search.popularSearches.options.4')}
-        </Link>
-      </div>
-      <Tabs>
-        <Tabs.Bar
+      <ToggleViewContext.Provider value={[currentView, setCurrentView]}>
+        <h1
           css={css`
-            display: block;
-            font-size: 1.25rem;
-            border: none;
-            margin-bottom: 3rem;
-            border: solid #bbb 1px;
-            border-radius: 5px;
-            width: 310px;
-
-            button {
-              padding: 8px 16px;
-              border-left: solid #bbb 1px;
+            font-size: 3.5rem;
+            font-weight: 500;
+            line-height: 1;
+            @media screen and (max-width: ${mobileBreakpoint}) {
+              font-size: 1.5rem;
             }
           `}
         >
-          <Tabs.BarItem
-            id="new-user-view"
-            onClick={() => {
-              tessen.track({
-                eventName: 'homepageToggleClick',
-                category: 'HomepageToggle',
-                tabView: 'newUserView',
-              });
-            }}
+          {t('home.pageTitle')}
+        </h1>
+        <ToggleSelector />
+        <SearchInput
+          placeholder={t('home.search.placeholder')}
+          size={SearchInput.SIZE.LARGE}
+          value={searchTerm || ''}
+          iconName={SearchInput.ICONS.SEARCH}
+          isIconClickable
+          alignIcon={SearchInput.ICON_ALIGNMENT.RIGHT}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          onSubmit={() => navigate(`?q=${searchTerm || ''}`)}
+          css={css`
+            @media screen and (max-width: ${mobileBreakpoint}) {
+              margin-bottom: 1rem;
+            }
+          `}
+        />
+        <div
+          css={css`
+            margin-top: 1rem;
+            width: 40%;
+            display: flex;
+            width: 100%;
+            flex-wrap: wrap;
+            a {
+              margin-left: 0.75rem;
+            }
+            @media screen and (max-width: ${mobileBreakpoint}) {
+              display: none;
+            }
+          `}
+        >
+          <p>{t('home.search.popularSearches.title')}: </p>
+          <Link to="?q=nrql">{t('home.search.popularSearches.options.0')}</Link>
+          <Link to="?q=logs">{t('home.search.popularSearches.options.1')}</Link>
+          <Link to="?q=alert">
+            {t('home.search.popularSearches.options.2')}
+          </Link>
+          <Link to="?q=best practices">
+            {t('home.search.popularSearches.options.3')}
+          </Link>
+          <Link to="?q=kubernetes">
+            {t('home.search.popularSearches.options.4')}
+          </Link>
+        </div>
+        <ToggleView id="new-user-view">
+          <h1
+            css={css`
+              font-weight: normal;
+              font-size: 3rem;
+            `}
           >
-            New user view
-          </Tabs.BarItem>
-          <Tabs.BarItem
-            id="default-view"
-            onClick={() => {
-              tessen.track({
-                eventName: 'homepageToggleClick',
-                category: 'HomepageToggle',
-                tabView: 'defaultView',
-              });
-            }}
+            Getting started
+          </h1>
+          <h1> {title}</h1>
+          <MDXContainer body={body} />
+        </ToggleView>
+        <ToggleView id="default-view">
+          <HomepageBanner />
+          <Section
+            layout={layout}
+            css={css`
+              border: none;
+              background: var(--tertiary-background-color);
+            `}
           >
-            Default view
-          </Tabs.BarItem>
-        </Tabs.Bar>
-
-        <Tabs.Pages>
-          <Tabs.Page id="new-user-view">
-            <h1
+            <SectionTitle title={t('home.popularDocs.title')} />
+            <div
               css={css`
-                font-weight: normal;
-                font-size: 3rem;
+                display: grid;
+                grid-template-columns: repeat(3, 1fr);
+                grid-gap: 1rem;
+                counter-reset: welcome-tile;
+                flex: 2;
+                align-self: flex-start;
+                @media screen and (max-width: 1500px) {
+                  align-self: auto;
+                }
+
+                @media screen and (max-width: 1050px) {
+                  grid-template-columns: 1fr;
+                }
+
+                @media screen and (max-width: 760px) {
+                  grid-template-columns: repeat(3, 1fr);
+                }
+
+                @media screen and (max-width: 650px) {
+                  grid-template-columns: 1fr;
+                }
               `}
             >
-              Getting started
-            </h1>
-            <h1> {title}</h1>
-            <MDXContainer body={body} />
-          </Tabs.Page>
-          <Tabs.Page id="default-view">
-            <HomepageBanner />
-            <Section
-              layout={layout}
+              <DocTile
+                title={t('home.popularDocs.t1.title')}
+                label={{ text: 'Get started', color: '#F4CBE7' }}
+                path="/docs/apm/new-relic-apm/getting-started/introduction-apm"
+              />
+              <DocTile
+                title={t('home.popularDocs.t2.title')}
+                label={{ text: 'Security', color: '#FCD672' }}
+                path="/docs/vulnerability-management/overview"
+              />
+              <DocTile
+                title={t('home.popularDocs.t3.title')}
+                label={{ text: 'APM', color: '#AFE2E3' }}
+                path="/install/java/"
+              />
+            </div>
+          </Section>
+          <Section layout={layout}>
+            <SectionTitle title={t('home.whatsNew.title')} />
+            <div
               css={css`
-                border: none;
-                background: var(--tertiary-background-color);
+                display: grid;
+                grid-template-columns: repeat(3, 1fr);
+                grid-gap: 1rem;
+                counter-reset: welcome-tile;
+                flex: 2;
+                align-self: flex-start;
+                @media screen and (max-width: 1500px) {
+                  align-self: auto;
+                }
+
+                @media screen and (max-width: 1050px) {
+                  grid-template-columns: 1fr;
+                }
+
+                @media screen and (max-width: 760px) {
+                  grid-template-columns: repeat(3, 1fr);
+                }
+
+                @media screen and (max-width: 650px) {
+                  grid-template-columns: 1fr;
+                }
               `}
             >
-              <SectionTitle title={t('home.popularDocs.title')} />
-              <div
-                css={css`
-                  display: grid;
-                  grid-template-columns: repeat(3, 1fr);
-                  grid-gap: 1rem;
-                  counter-reset: welcome-tile;
-                  flex: 2;
-                  align-self: flex-start;
-                  @media screen and (max-width: 1500px) {
-                    align-self: auto;
-                  }
-
-                  @media screen and (max-width: 1050px) {
-                    grid-template-columns: 1fr;
-                  }
-
-                  @media screen and (max-width: 760px) {
-                    grid-template-columns: repeat(3, 1fr);
-                  }
-
-                  @media screen and (max-width: 650px) {
-                    grid-template-columns: 1fr;
-                  }
-                `}
-              >
+              {latestWhatsNewPosts.map((post) => (
                 <DocTile
-                  title={t('home.popularDocs.t1.title')}
-                  label={{ text: 'Get started', color: '#F4CBE7' }}
-                  path="/docs/apm/new-relic-apm/getting-started/introduction-apm"
+                  key={post.title}
+                  title={post.title}
+                  date={post.releaseDate}
+                  path={post.path}
                 />
-                <DocTile
-                  title={t('home.popularDocs.t2.title')}
-                  label={{ text: 'Security', color: '#FCD672' }}
-                  path="/docs/vulnerability-management/overview"
-                />
-                <DocTile
-                  title={t('home.popularDocs.t3.title')}
-                  label={{ text: 'APM', color: '#AFE2E3' }}
-                  path="/install/java/"
-                />
-              </div>
-            </Section>
-            <Section layout={layout}>
-              <SectionTitle title={t('home.whatsNew.title')} />
-              <div
-                css={css`
-                  display: grid;
-                  grid-template-columns: repeat(3, 1fr);
-                  grid-gap: 1rem;
-                  counter-reset: welcome-tile;
-                  flex: 2;
-                  align-self: flex-start;
-                  @media screen and (max-width: 1500px) {
-                    align-self: auto;
-                  }
-
-                  @media screen and (max-width: 1050px) {
-                    grid-template-columns: 1fr;
-                  }
-
-                  @media screen and (max-width: 760px) {
-                    grid-template-columns: repeat(3, 1fr);
-                  }
-
-                  @media screen and (max-width: 650px) {
-                    grid-template-columns: 1fr;
-                  }
-                `}
-              >
-                {latestWhatsNewPosts.map((post) => (
-                  <DocTile
-                    key={post.title}
-                    title={post.title}
-                    date={post.releaseDate}
-                    path={post.path}
-                  />
-                ))}
-              </div>
-            </Section>
-            <Section layout={layout}>
-              <FindYourQuickStart />
-            </Section>
-          </Tabs.Page>
-        </Tabs.Pages>
-      </Tabs>
+              ))}
+            </div>
+          </Section>
+          <Section layout={layout}>
+            <FindYourQuickStart />
+          </Section>
+        </ToggleView>
+      </ToggleViewContext.Provider>
     </>
   );
 };
